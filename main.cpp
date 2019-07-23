@@ -91,8 +91,8 @@ private:
     /// set sliding costs so tile at spot index will not be moved
     void Fix( int j );
 
-    /// path between spots, using dijsktra algorithm
-    vector<int> Path(int src, int dst);
+    /// move empty spot to reuired position, using dijsktra algorithm
+    vector<int> Path(int dst);
 
     int NextTarget( int tile );
 };
@@ -131,7 +131,6 @@ cFifteen::cFifteen()
 void cFifteen::Solve()
 {
     cout << "Solve\n";
-    Text();
 
     int j1 = NodeFromTile( 1 );
     while( 1 )
@@ -139,12 +138,9 @@ void cFifteen::Solve()
         int jtarget = NextTarget( 1 );
         if( jtarget < 0 )
             break;
-        cout << "target " << jtarget << "\n";
         CostInit();
         Fix( j1 );
-        int j0 = NodeFromTile( 0 );
-
-        Path( j0, jtarget );
+        Path( jtarget );
         Click( j1 );
         if( jtarget == 0 )
             break;
@@ -158,13 +154,10 @@ void cFifteen::Solve()
         int jtarget = NextTarget( 2 );
         if( jtarget < 0 )
             break;
-        cout << "target " << jtarget << "\n";
         CostInit();
         Fix( 0 );
         Fix( j1 );
-        int j0 = NodeFromTile( 0 );
-
-        Path( j0, jtarget );
+        Path( jtarget );
         Click( j1 );
         if( jtarget == 1 )
             break;
@@ -178,14 +171,11 @@ void cFifteen::Solve()
         int jtarget = NextTarget( 3 );
         if( jtarget < 0 )
             break;
-        cout << "target " << jtarget << "\n";
         CostInit();
         Fix( 0 );
         Fix( 1 );
         Fix( j1 );
-        int j0 = NodeFromTile( 0 );
-
-        Path( j0, jtarget );
+        Path( jtarget );
         Click( j1 );
         if( jtarget == 3 )
             break;
@@ -199,15 +189,12 @@ void cFifteen::Solve()
         int jtarget = NextTarget( 4 );
         if( jtarget < 0 )
             break;
-        cout << "target " << jtarget << "\n";
         CostInit();
         Fix( 0 );
         Fix( 1 );
         Fix( 3 );
         Fix( j1 );
-        int j0 = NodeFromTile( 0 );
-
-        Path( j0, jtarget );
+        Path( jtarget );
         Click( j1 );
         if( jtarget == 7 )
             break;
@@ -219,7 +206,7 @@ void cFifteen::Solve()
     Fix( 1 );
     Fix( 3 );
     Fix( 7 );
-    Path( NodeFromTile( 0 ), 2 );
+    Path( 2 );
     Click( 3 );
     Click( 7 );
 
@@ -270,8 +257,9 @@ int cFifteen::NextTarget( int tile )
     return NodeFromColRow( cr );
 }
 
-vector<int> cFifteen::Path( int src, int dst )
+vector<int> cFifteen::Path( int dst )
 {
+    int src = NodeFromTile( 0 );
     cout << "Path " << src <<" "<< dst << "\n";
     auto weights = boost::get(&cEdge::myCost, myGB );
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(myGB));
@@ -342,46 +330,6 @@ void cFifteen::Click( int jc )
     }
     Text();
 }
-//void cFifteen::MoveSpace( int tx, int ty )
-//{
-//    cout << "MoveSpace " << tx <<" " << ty << "\n";
-//
-//    std::pair<int,int> l0 = find( 0 );
-//    int dx = l0.first - tx;
-//    while( dx != 0 )
-//    {
-//        int d1 = 1;
-//        if( dx > 0 )
-//            d1 = -1;
-//        Click( l0.first+d1, l0.second );
-//        l0 = find( 0 );
-//        dx = l0.first - tx;
-//    }
-//    int dy = l0.second - ty;
-//    while( dy != 0 )
-//    {
-//        int d1 = 1;
-//        if( dy > 0 )
-//            d1 = -1;
-//        Click( l0.first, l0.second+d1 );
-//        l0 = find( 0 );
-//        dy = l0.second - ty;
-//    }
-//}
-
-//std::pair<int,int> cFifteen::find( int t )
-//{
-//    for( int y = 0; y < 4; y++ )
-//    {
-//        for( int x = 0; x < 4; x++  )
-//        {
-//            if( myBoard[x][y] == t )
-//            {
-//                return make_pair( x, y );
-//            }
-//        }
-//    }
-//}
 
 int cFifteen::NodeFromTile( int t )
 {
