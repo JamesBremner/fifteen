@@ -449,10 +449,13 @@ bool cFifteen::IsSolveable()
     int zr = ColRowFromNode( NodeFromTile( 0 ) ).second;
     int ic = InvCount();
     cout << "IsSolveable "<< ic << " " << zr << "\n";
-    if( ic % 2 ) {
+    if( ic % 2 )
+    {
         if( zr == 2 || zr == 0 )
             return true;
-    } else {
+    }
+    else
+    {
         if( zr == 3 || zr == 1 )
             return true;
     }
@@ -480,12 +483,11 @@ int cFifteen::InvCount()
 
 void cFifteen::Random()
 {
-    for( int n = 0; n < 16; n++ )
-        myGB[ n ].myTile = 0;
-
     bool Solveable = false;
     while( ! Solveable )
     {
+        for( int n = 0; n < 16; n++ )
+            myGB[ n ].myTile = 0;
         for( int tile = 1; tile <= 15; tile++ )
         {
             while( 1 )
@@ -500,6 +502,7 @@ void cFifteen::Random()
         }
         Solveable = IsSolveable();
     }
+
 }
 
 void cFifteen::Read( const string& fname )
