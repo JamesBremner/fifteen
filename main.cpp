@@ -305,6 +305,8 @@ bool cFifteen::Solve()
         dnd[ dnd.size()-2 ] = 8;
         dnd[ dnd.size()-1 ] = 12;
 
+        Move( 14, 15, dnd );
+        dnd.erase( dnd.end()-1 );
         Move( 10, 13, dnd );
         Move( 14, 14, dnd );
 
@@ -554,7 +556,7 @@ int main( int argc, char* argv[] )
         srand (time(NULL));
         int count = 0;
         int success = 0;
-        for( int k=0; k < 20; k++ )
+        for( int k=0; k < 100; k++ )
         {
             F.Random();
             //F.Animate();
