@@ -44,7 +44,7 @@ public:
     /// CTOR, link spots that tile can slide between ( orthogonal )
     cFifteen();
 
-    /// Assign tiles randomly
+    /// Generate a random solveable initial tile arrangement
     void Random();
 
     /// Assign tiles from file
@@ -120,6 +120,10 @@ private:
     */
     void Move( int tile, int dst,
                vector<int>& dnd );
+
+    /// true if solveable https://www.geeksforgeeks.org/check-instance-15-puzzle-solvable/
+    bool IsSolveable();
+    int InvCount();
 };
 
 cFifteen::cFifteen()
@@ -307,7 +311,6 @@ bool cFifteen::Solve()
         Move( 11, 10, dnd );
 
         int loc12 = NodeFromTile( 12 );
-        cout << "loc12 " << loc12 << "\n";
 
         if( loc12 == 15 )
         {
@@ -318,10 +321,13 @@ bool cFifteen::Solve()
 
         cout << "\n";
         Text();
+        cout << "================================================\n";
+        return true;
     }
     catch( runtime_error& e )
     {
         cout << e.what() << "\n";
+        cout << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";
         return false;
     }
 
@@ -334,7 +340,6 @@ vector<int> cFifteen::Path( int src, int dst )
     if( src == dst )
         return path;
 
-    auto weights = boost::get(&cEdge::myCost, myGB );
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(myGB));
     boost::dijkstra_shortest_paths(
         myGB, src,
@@ -371,10 +376,10 @@ void cFifteen::CostInit()
         //cout <<  boost::source(*ei, myGB ) <<" "<< boost::target(*ei, myGB ) << " set cost 1\n";
 
         if(  ColRowFromNode(boost::source(*ei, myGB)).second == 0 ||
-          ColRowFromNode(boost::target(*ei, myGB)).second == 0 )
-        myGB[*ei].myCost = 10;
+                ColRowFromNode(boost::target(*ei, myGB)).second == 0 )
+            myGB[*ei].myCost = 10;
         else
-        myGB[*ei].myCost = 1;
+            myGB[*ei].myCost = 1;
     }
 }
 
@@ -405,7 +410,8 @@ void cFifteen::Click( int jc )
         myGB[ j0 ].myTile = myGB[ jc ].myTile;
         myGB[ jc ].myTile = 0;
     }
-    if( myfAnimate ) {
+    if( myfAnimate )
+    {
         cout << "Click " << jc << "\n";
         Text();
     }
@@ -437,25 +443,62 @@ void cFifteen::Text()
 
 }
 
+bool cFifteen::IsSolveable()
+{
+    Text();
+    int zr = ColRowFromNode( NodeFromTile( 0 ) ).second;
+    int ic = InvCount();
+    cout << "IsSolveable "<< ic << " " << zr << "\n";
+    if( ic % 2 ) {
+        if( zr == 2 || zr == 0 )
+            return true;
+    } else {
+        if( zr == 3 || zr == 1 )
+            return true;
+    }
+    return false;
+}
+
+int cFifteen::InvCount()
+{
+    int inv_count = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        for (int j = i + 1; j < 16; j++)
+        {
+            int ti = myGB[ i ].myTile;
+            int tj = myGB[ j ].myTile;
+            if( ti == 0 || tj == 0 )
+                continue;
+            if( ti > tj )
+                inv_count++;
+            //cout << i <<" "<< j <<" "<< ti <<" "<< tj <<" "<< inv_count << "\n";
+        }
+    }
+    return inv_count;
+}
+
 void cFifteen::Random()
 {
-    /* initialize random seed: */
-    srand (time(NULL));
-
     for( int n = 0; n < 16; n++ )
         myGB[ n ].myTile = 0;
 
-    for( int tile = 1; tile <= 15; tile++ )
+    bool Solveable = false;
+    while( ! Solveable )
     {
-        while( 1 )
+        for( int tile = 1; tile <= 15; tile++ )
         {
-            int n = rand() % 16;
-            if( myGB[ n ].myTile == 0 )
+            while( 1 )
             {
-                myGB[ n ].myTile = tile;
-                break;
+                int n = rand() % 16;
+                if( myGB[ n ].myTile == 0 )
+                {
+                    myGB[ n ].myTile = tile;
+                    break;
+                }
             }
         }
+        Solveable = IsSolveable();
     }
 }
 
@@ -474,22 +517,38 @@ void cFifteen::Read( const string& fname )
         f >> tile;
         myGB[ k ].myTile = tile;
     }
-
+    if( ! IsSolveable() )
+        throw runtime_error("Not solveable");
 }
-
 
 int main( int argc, char* argv[] )
 {
     cFifteen F;
     if( argc == 1 )
-        F.Random();
+    {
+        /* initialize random seed: */
+        srand (time(NULL));
+        int count = 0;
+        int success = 0;
+        for( int k=0; k < 20; k++ )
+        {
+            F.Random();
+            //F.Animate();
+            F.Text();
+            if( F.Solve() )
+                success++;
+            count++;
+        }
+        cout <<"success " << success << " / " << count << "\n";
+    }
     else
     {
         F.Read( argv[1] );
         F.Animate();
         F.Instrument();
+        F.Text();
+        F.Solve();
     }
-    F.Text();
-    F.Solve();
+
     return 0;
 }
