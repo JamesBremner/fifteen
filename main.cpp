@@ -91,10 +91,14 @@ private:
     /// set sliding costs so tile at spot index will not be moved
     void Fix( int j );
 
-    /// move empty spot to reuired position, using dijsktra algorithm
-    vector<int> Path(int dst);
+    /// path from src to dst, using dijsktra algorithm
+    vector<int> Path( int src, int dst );
 
-    int NextTarget( int tile );
+    /** Move tile
+        @param[in] tile
+        @param[in] dst spot index where tile should move to
+    */
+    void Move( int tile, int dst );
 };
 
 cFifteen::cFifteen()
@@ -128,138 +132,78 @@ cFifteen::cFifteen()
     }
 }
 
+void cFifteen::Move( int tile, int dst )
+{
+    // tile location
+    int jt = NodeFromTile( tile );
+
+    // whie not at destination
+    while( jt != dst )
+    {
+        // prevent disturbing previously positioned tiles
+        CostInit();
+        for( int f = 0; f <= tile; f++ )
+            Fix( NodeFromTile( f ) );
+
+        // path to move tile
+        vector<int> TilePath = Path( jt, dst );
+
+        // path to move space
+        vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[0] );
+
+        // move space
+        for( int j : SpacePath )
+            Click( j );
+
+        // move tile
+        Click( jt );
+
+        // new tile location
+        jt = NodeFromTile( tile );
+    }
+}
+
 void cFifteen::Solve()
 {
     cout << "Solve\n";
 
-    int j1 = NodeFromTile( 1 );
-    while( 1 )
-    {
-        int jtarget = NextTarget( 1 );
-        if( jtarget < 0 )
-            break;
-        CostInit();
-        Fix( j1 );
-        Path( jtarget );
-        Click( j1 );
-        if( jtarget == 0 )
-            break;
-        j1 = jtarget;
-    }
-
-    cout << " *** 2 ***\n";
-    j1 = NodeFromTile( 2 );
-    while( 1 )
-    {
-        int jtarget = NextTarget( 2 );
-        if( jtarget < 0 )
-            break;
-        CostInit();
-        Fix( 0 );
-        Fix( j1 );
-        Path( jtarget );
-        Click( j1 );
-        if( jtarget == 1 )
-            break;
-        j1 = jtarget;
-    }
-
-    cout << " *** 3 ***\n";
-    j1 = NodeFromTile( 3 );
-    while( 1 )
-    {
-        int jtarget = NextTarget( 3 );
-        if( jtarget < 0 )
-            break;
-        CostInit();
-        Fix( 0 );
-        Fix( 1 );
-        Fix( j1 );
-        Path( jtarget );
-        Click( j1 );
-        if( jtarget == 3 )
-            break;
-        j1 = jtarget;
-    }
-
-    cout << " *** 4 ***\n";
-    j1 = NodeFromTile( 4 );
-    while( 1 )
-    {
-        int jtarget = NextTarget( 4 );
-        if( jtarget < 0 )
-            break;
-        CostInit();
-        Fix( 0 );
-        Fix( 1 );
-        Fix( 3 );
-        Fix( j1 );
-        Path( jtarget );
-        Click( j1 );
-        if( jtarget == 7 )
-            break;
-        j1 = jtarget;
-    }
+    Move( 1, 0 );
+    Move( 2, 1 );
+    Move( 3, 3 );
+    Move( 4, 7 );
 
     CostInit();
     Fix( 0 );
     Fix( 1 );
     Fix( 3 );
     Fix( 7 );
-    Path( 2 );
+    for( int j : Path( NodeFromTile( 0 ), 2 ) )
+        Click( j );
     Click( 3 );
     Click( 7 );
 
+    Move( 5, 4 );
+    Move( 6, 5 );
+    Move( 7, 7 );
+    Move( 8, 11 );
+
+    CostInit();
+    Fix( 0 );
+    Fix( 1 );
+    Fix( 2 );
+    Fix( 3 );
+    Fix( 4 );
+    Fix( 5 );
+    Fix( 7 );
+    Fix( 11 );
+    for( int j : Path( NodeFromTile( 0 ), 6 ) )
+        Click( j );
+    Click( 7 );
+    Click( 11 );
 }
 
-int cFifteen::NextTarget( int tile )
+vector<int> cFifteen::Path( int src, int dst )
 {
-    int present = NodeFromTile( tile );
-    std::pair<int,int> cr = ColRowFromNode( present );
-    switch( tile )
-    {
-    case 1:
-        if( cr.first )
-            cr.first -= 1;
-        else if( cr.second )
-            cr.second -= 1;
-        else
-            cr.first = -1;
-        break;
-    case 2:
-        if( cr.first == 1 && cr.second == 0 )
-            cr.first = -1;
-        if( cr.first != 1 )
-            if( cr.first == 0 )
-                cr.first = 1;
-            else
-                cr.first -= 1;
-        else
-            cr.second -= 1;
-        break;
-    case 3:
-        if( cr.first == 3 && cr.second == 0 )
-            break;
-        if( cr.first != 3 )
-            cr.first += 1;
-        else
-            cr.second -= 1;
-        break;
-    case 4:
-        if( cr.second == 0 )
-            throw std::runtime_error("4 misplaced");
-        if( cr.second != 1 )
-            cr.second -= 1;
-        else
-            cr.first += 1;
-        break;
-    }
-    return NodeFromColRow( cr );
-}
-
-vector<int> cFifteen::Path( int dst )
-{
-    int src = NodeFromTile( 0 );
     cout << "Path " << src <<" "<< dst << "\n";
     auto weights = boost::get(&cEdge::myCost, myGB );
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(myGB));
@@ -286,10 +230,10 @@ vector<int> cFifteen::Path( int dst )
         cout << "\n";
     }
 
-    for( int i : path )
-    {
-        Click( i );
-    }
+//    for( int i : path )
+//    {
+//        Click( i );
+//    }
     return path;
 
 }
