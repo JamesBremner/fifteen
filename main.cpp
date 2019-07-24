@@ -23,7 +23,7 @@ public:
 };
 class cFifteen
 {
-    // represent the fifteen puzzle box and tiles with a graph
+    /// represent the fifteen puzzle box and tiles with a boost graph
     typedef boost::adjacency_list
     <
     boost::listS,
@@ -34,10 +34,10 @@ class cFifteen
 
     graph_t myGB;
 
-    vector<int> mySolution;
+    vector<int> mySolution;     /// The clicks needed to solve the puzzle
 
-    bool myfAnimate;
-    bool myfInstrument;
+    bool myfAnimate;        /// true if puzzled should be displayed at every step
+    bool myfInstrument;     /// true if debugging instrumentation should be displayed
 
 public:
 
@@ -110,7 +110,16 @@ private:
     /// set sliding costs so tile at spot index will not be moved
     void Fix( int j );
 
-    /// path from src to dst, using dijsktra algorithm
+    /** path from src to dst, using dijsktra algorithm
+        @param[in] src
+        @param[in] dst
+        @return vector of spots to be visited
+
+        Uses the dijsktra algorithm implemented by boost::graph
+
+        An A* would be faster for large puzzles,
+        but dijsktra is plenty fast for the 15 puzzle.
+    */
     vector<int> Path( int src, int dst );
 
     /** Move tile
@@ -237,6 +246,8 @@ bool cFifteen::Solve()
         vector<int> dnd;
         Move( 1, 0, dnd );
         Move( 2, 1, dnd );
+        Move( 4, 13, dnd );
+        dnd.erase( dnd.end()-1 );
         Move( 3, 3, dnd );
         Move( 4, 7, dnd );
 
