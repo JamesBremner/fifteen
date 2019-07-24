@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
@@ -36,6 +37,7 @@ class cFifteen
     vector<int> mySolution;
 
     bool myfAnimate;
+    bool myfInstrument;
 
 public:
 
@@ -44,6 +46,9 @@ public:
 
     /// Assign tiles randomly
     void Random();
+
+    /// Assign tiles from file
+    void Read( const string& fname );
 
     /// Display puzzle
     void Text();
@@ -58,6 +63,14 @@ public:
     */
     void Click( int jc );
 
+    void Animate()
+    {
+        myfAnimate = true;
+    }
+    void Instrument()
+    {
+        myfInstrument = true;
+    }
 private:
 
     /** spot index from row, column
@@ -111,6 +124,9 @@ private:
 
 cFifteen::cFifteen()
 {
+    myfAnimate = false;
+    myfInstrument = false;
+
     for( int kr = 0; kr<4; kr++ )
     {
         for( int kc =0; kc < 4; kc++ )
@@ -154,7 +170,7 @@ void cFifteen::Move( int tile, int dst,
         int count = 0;
         while( jt != dst )
         {
-            if( count++ >= 100 )
+            if( count++ >= 50 )
                 throw 1;
 
             // do not disturb tiles that are already in position
@@ -189,9 +205,10 @@ void cFifteen::Move( int tile, int dst,
     }
     catch( int e )
     {
+        cout << "\n";
         Text();
         stringstream ss;
-        ss << "\nMove tile " << tile << " to spot " << dst << " failed";
+        ss << "Move tile " << tile << " to spot " << dst << " failed";
         throw std::runtime_error( ss.str());
     }
 }
@@ -290,6 +307,7 @@ bool cFifteen::Solve()
         Move( 11, 10, dnd );
 
         int loc12 = NodeFromTile( 12 );
+        cout << "loc12 " << loc12 << "\n";
 
         if( loc12 == 15 )
         {
@@ -318,10 +336,11 @@ vector<int> cFifteen::Path( int src, int dst )
 
     auto weights = boost::get(&cEdge::myCost, myGB );
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(myGB));
-    boost::dijkstra_shortest_paths(myGB, src,
-                                   boost::weight_map(boost::get(&cEdge::myCost, myGB))
-                                   .predecessor_map(boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,myGB)))
-                                  );
+    boost::dijkstra_shortest_paths(
+        myGB, src,
+        boost::weight_map(boost::get(&cEdge::myCost, myGB))
+        .predecessor_map(boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,myGB)))
+    );
 
     graph_t::vertex_descriptor v = dst;
     for( auto u = predecessors[v]; u != v; v=u, u=predecessors[v])
@@ -333,11 +352,11 @@ vector<int> cFifteen::Path( int src, int dst )
 
     if( ! path.size() )
         throw std::runtime_error( "no path" );
-    else
+    else if( myfInstrument )
     {
-//        for( int i : path )
-//            cout << i << "->";
-//        cout << "\n";
+        for( int i : path )
+            cout << i << "->";
+        cout << "\n";
     }
 
     return path;
@@ -350,13 +369,20 @@ void cFifteen::CostInit()
     for (boost::tie(ei, ei_end) = edges(myGB); ei != ei_end; ++ei)
     {
         //cout <<  boost::source(*ei, myGB ) <<" "<< boost::target(*ei, myGB ) << " set cost 1\n";
+
+        if(  ColRowFromNode(boost::source(*ei, myGB)).second == 0 ||
+          ColRowFromNode(boost::target(*ei, myGB)).second == 0 )
+        myGB[*ei].myCost = 10;
+        else
         myGB[*ei].myCost = 1;
     }
 }
 
 void cFifteen::Fix( int j )
 {
-    //cout << "Fix" << j << " ";
+    if( myfInstrument)
+        cout << "Fix" << j << " ";
+
     boost::graph_traits<graph_t>::out_edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = out_edges(j, myGB);
             ei != ei_end; ++ei)
@@ -379,8 +405,10 @@ void cFifteen::Click( int jc )
         myGB[ j0 ].myTile = myGB[ jc ].myTile;
         myGB[ jc ].myTile = 0;
     }
-    if( myfAnimate )
+    if( myfAnimate ) {
+        cout << "Click " << jc << "\n";
         Text();
+    }
     mySolution.push_back( jc );
 }
 
@@ -431,11 +459,36 @@ void cFifteen::Random()
     }
 }
 
+void cFifteen::Read( const string& fname )
+{
+    ifstream f( fname );
+    if( ! f.is_open() )
+    {
+        cout << "Cannot read " << fname << "\n";
+        exit(1);
+    }
 
-int main()
+    int tile;
+    for( int k = 0; k < 16; k++ )
+    {
+        f >> tile;
+        myGB[ k ].myTile = tile;
+    }
+
+}
+
+
+int main( int argc, char* argv[] )
 {
     cFifteen F;
-    F.Random();
+    if( argc == 1 )
+        F.Random();
+    else
+    {
+        F.Read( argv[1] );
+        F.Animate();
+        F.Instrument();
+    }
     F.Text();
     F.Solve();
     return 0;
