@@ -169,6 +169,7 @@ void cFifteen::Move( int tile, int dst,
     {
         // tile location
         int jt = NodeFromTile( tile );
+        int jstart = jt;
 
         // while not at destination
         int count = 0;
@@ -186,9 +187,13 @@ void cFifteen::Move( int tile, int dst,
             Fix( jt );
 
             // path to move tile
+            if( myfInstrument )
+                cout << "\nTile Path: ";
             vector<int> TilePath = Path( jt, dst );
 
             // path to move space
+            if( myfInstrument )
+                cout << "\nSpace Path: ";
             vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[0] );
 
             // move space
@@ -200,6 +205,10 @@ void cFifteen::Move( int tile, int dst,
 
             // new tile location
             jt = NodeFromTile( tile );
+
+            // check that we are making progress
+            if( jt == jstart )
+                throw 2;
         }
 
         // the tile is now in position
@@ -445,10 +454,10 @@ void cFifteen::Text()
 
 bool cFifteen::IsSolveable()
 {
-    Text();
+    //Text();
     int zr = ColRowFromNode( NodeFromTile( 0 ) ).second;
     int ic = InvCount();
-    cout << "IsSolveable "<< ic << " " << zr << "\n";
+    // cout << "IsSolveable "<< ic << " " << zr << "\n";
     if( ic % 2 )
     {
         if( zr == 2 || zr == 0 )
@@ -502,7 +511,8 @@ void cFifteen::Random()
         }
         Solveable = IsSolveable();
     }
-
+//    cout << "Random generated\n";
+//    Text();
 }
 
 void cFifteen::Read( const string& fname )
