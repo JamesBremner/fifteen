@@ -33,6 +33,10 @@ class cFifteen
 
     graph_t myGB;
 
+    vector<int> mySolution;
+
+    bool myfAnimate;
+
 public:
 
     /// CTOR, link spots that tile can slide between ( orthogonal )
@@ -44,8 +48,10 @@ public:
     /// Display puzzle
     void Text();
 
-    /// Solve puzzle
-    void Solve();
+    /** Solve puzzle using method described in http://www.chessandpoker.com/fifteen-puzzle-solution.html
+        @return true if solved
+    */
+    bool Solve();
 
     /** Click on tile, slide to adjacent empty spot
         param[in] index of tile spot, 0 to 15
@@ -97,8 +103,10 @@ private:
     /** Move tile
         @param[in] tile
         @param[in] dst spot index where tile should move to
+        @param[in/out] dnd spots that must not be disturbed containing previouly arranged tiles
     */
-    void Move( int tile, int dst );
+    void Move( int tile, int dst,
+               vector<int>& dnd );
 };
 
 cFifteen::cFifteen()
@@ -132,79 +140,182 @@ cFifteen::cFifteen()
     }
 }
 
-void cFifteen::Move( int tile, int dst )
+void cFifteen::Move( int tile, int dst,
+                     vector<int>& dnd )
 {
-    // tile location
-    int jt = NodeFromTile( tile );
+    cout << "Move tile " << tile << " to spot " << dst << ", ";
 
-    // whie not at destination
-    while( jt != dst )
+    try
     {
-        // prevent disturbing previously positioned tiles
-        CostInit();
-        for( int f = 0; f <= tile; f++ )
-            Fix( NodeFromTile( f ) );
+        // tile location
+        int jt = NodeFromTile( tile );
 
-        // path to move tile
-        vector<int> TilePath = Path( jt, dst );
+        // while not at destination
+        int count = 0;
+        while( jt != dst )
+        {
+            if( count++ >= 100 )
+                throw 1;
 
-        // path to move space
-        vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[0] );
+            // do not disturb tiles that are already in position
+            CostInit();
+            for( int f : dnd )
+                Fix( f );
 
-        // move space
-        for( int j : SpacePath )
-            Click( j );
+            // fix tile we are moving so that space path does not move it
+            Fix( jt );
 
-        // move tile
-        Click( jt );
+            // path to move tile
+            vector<int> TilePath = Path( jt, dst );
 
-        // new tile location
-        jt = NodeFromTile( tile );
+            // path to move space
+            vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[0] );
+
+            // move space
+            for( int j : SpacePath )
+                Click( j );
+
+            // move tile
+            Click( jt );
+
+            // new tile location
+            jt = NodeFromTile( tile );
+        }
+
+        // the tile is now in position
+        // prevent moving it again
+        dnd.push_back( jt );
+
+    }
+    catch( int e )
+    {
+        Text();
+        stringstream ss;
+        ss << "\nMove tile " << tile << " to spot " << dst << " failed";
+        throw std::runtime_error( ss.str());
     }
 }
 
-void cFifteen::Solve()
+bool cFifteen::Solve()
 {
     cout << "Solve\n";
 
-    Move( 1, 0 );
-    Move( 2, 1 );
-    Move( 3, 3 );
-    Move( 4, 7 );
+    mySolution.clear();
 
-    CostInit();
-    Fix( 0 );
-    Fix( 1 );
-    Fix( 3 );
-    Fix( 7 );
-    for( int j : Path( NodeFromTile( 0 ), 2 ) )
-        Click( j );
-    Click( 3 );
-    Click( 7 );
+    try
+    {
+        vector<int> dnd;
+        Move( 1, 0, dnd );
+        Move( 2, 1, dnd );
+        Move( 3, 3, dnd );
+        Move( 4, 7, dnd );
 
-    Move( 5, 4 );
-    Move( 6, 5 );
-    Move( 7, 7 );
-    Move( 8, 11 );
+        CostInit();
+        Fix( 0 );
+        Fix( 1 );
+        Fix( 3 );
+        Fix( 7 );
+        for( int j : Path( NodeFromTile( 0 ), 2 ) )
+            Click( j );
+        Click( 3 );
+        Click( 7 );
+        dnd[ dnd.size()-2 ] = 2;
+        dnd[ dnd.size()-1 ] = 3;
 
-    CostInit();
-    Fix( 0 );
-    Fix( 1 );
-    Fix( 2 );
-    Fix( 3 );
-    Fix( 4 );
-    Fix( 5 );
-    Fix( 7 );
-    Fix( 11 );
-    for( int j : Path( NodeFromTile( 0 ), 6 ) )
-        Click( j );
-    Click( 7 );
-    Click( 11 );
+        Move( 5, 4, dnd );
+        Move( 6, 5, dnd );
+        Move( 7, 7, dnd );
+        Move( 8, 11, dnd );
+
+        CostInit();
+        Fix( 0 );
+        Fix( 1 );
+        Fix( 2 );
+        Fix( 3 );
+        Fix( 4 );
+        Fix( 5 );
+        Fix( 7 );
+        Fix( 11 );
+        for( int j : Path( NodeFromTile( 0 ), 6 ) )
+            Click( j );
+        Click( 7 );
+        Click( 11 );
+        dnd[ dnd.size()-2 ] = 6;
+        dnd[ dnd.size()-1 ] = 7;
+
+        Move( 9, 12, dnd );
+        Move( 13, 13, dnd );
+
+        CostInit();
+        Fix( 0 );
+        Fix( 1 );
+        Fix( 2 );
+        Fix( 3 );
+        Fix( 4 );
+        Fix( 5 );
+        Fix( 6 );
+        Fix( 7 );
+        Fix( 12 );
+        Fix( 13 );
+        for( int j : Path( NodeFromTile( 0 ), 8 ) )
+            Click( j );
+        Click( 12 );
+        Click( 13 );
+        dnd[ dnd.size()-2 ] = 8;
+        dnd[ dnd.size()-1 ] = 12;
+
+        Move( 10, 13, dnd );
+        Move( 14, 14, dnd );
+
+        CostInit();
+        Fix( 0 );
+        Fix( 1 );
+        Fix( 2 );
+        Fix( 3 );
+        Fix( 4 );
+        Fix( 5 );
+        Fix( 6 );
+        Fix( 7 );
+        Fix( 8 );
+        Fix( 12 );
+        Fix( 13 );
+        Fix( 14 );
+        for( int j : Path( NodeFromTile( 0 ), 9 ) )
+            Click( j );
+        Click( 13 );
+        Click( 14 );
+        dnd[ dnd.size()-2 ] = 9;
+        dnd[ dnd.size()-1 ] = 13;
+
+        Move( 11, 10, dnd );
+
+        int loc12 = NodeFromTile( 12 );
+
+        if( loc12 == 15 )
+        {
+            Click( 15 );
+        }
+        if( loc12 == 14 )
+            throw runtime_error("\nUnsolveable");
+
+        cout << "\n";
+        Text();
+    }
+    catch( runtime_error& e )
+    {
+        cout << e.what() << "\n";
+        return false;
+    }
+
 }
 
 vector<int> cFifteen::Path( int src, int dst )
 {
-    cout << "Path " << src <<" "<< dst << "\n";
+    //cout << "Path " << src <<" "<< dst << "\n";
+    vector<int> path;
+    if( src == dst )
+        return path;
+
     auto weights = boost::get(&cEdge::myCost, myGB );
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(myGB));
     boost::dijkstra_shortest_paths(myGB, src,
@@ -212,7 +323,6 @@ vector<int> cFifteen::Path( int src, int dst )
                                    .predecessor_map(boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,myGB)))
                                   );
 
-    vector<int> path;
     graph_t::vertex_descriptor v = dst;
     for( auto u = predecessors[v]; u != v; v=u, u=predecessors[v])
     {
@@ -222,18 +332,14 @@ vector<int> cFifteen::Path( int src, int dst )
     reverse( path.begin(), path.end() );
 
     if( ! path.size() )
-        cout << "no path\n";
+        throw std::runtime_error( "no path" );
     else
     {
-        for( int i : path )
-            cout << i << "->";
-        cout << "\n";
+//        for( int i : path )
+//            cout << i << "->";
+//        cout << "\n";
     }
 
-//    for( int i : path )
-//    {
-//        Click( i );
-//    }
     return path;
 
 }
@@ -250,6 +356,7 @@ void cFifteen::CostInit()
 
 void cFifteen::Fix( int j )
 {
+    //cout << "Fix" << j << " ";
     boost::graph_traits<graph_t>::out_edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = out_edges(j, myGB);
             ei != ei_end; ++ei)
@@ -272,7 +379,9 @@ void cFifteen::Click( int jc )
         myGB[ j0 ].myTile = myGB[ jc ].myTile;
         myGB[ jc ].myTile = 0;
     }
-    Text();
+    if( myfAnimate )
+        Text();
+    mySolution.push_back( jc );
 }
 
 int cFifteen::NodeFromTile( int t )
@@ -284,20 +393,6 @@ int cFifteen::NodeFromTile( int t )
 
 void cFifteen::Text()
 {
-//    for( int y = 0; y < 4; y++ )
-//    {
-//        for( int x = 0; x < 4; x++  )
-//        {
-//            int t = myBoard[x][y];
-//            if( t )
-//                cout <<setw(3) << t;
-//            else
-//                cout << "   ";
-//        }
-//        cout << "\n";
-//    }
-//    cout << "\n";
-
     for( int y = 0; y < 4; y++ )
     {
         for( int x = 0; x < 4; x++  )
