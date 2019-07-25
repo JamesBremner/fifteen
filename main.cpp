@@ -178,7 +178,17 @@ cFifteen::cFifteen()
 void cFifteen::Move( int tile, int dst,
                      vector<int>& dnd )
 {
-    cout << "Move tile " << tile << " to spot " << dst << ", ";
+    //cout << "Move tile " << tile << " to spot " << dst << ", ";
+
+    // do not disturb tiles that are already in position
+    CostInit();
+    for( int f : dnd )
+        Fix( f );
+
+    // path to move tile
+    if( myfInstrument )
+        cout << "\nTile Path: ";
+    vector<int> TilePath = Path( NodeFromTile( tile ), dst );
 
     try
     {
@@ -187,7 +197,7 @@ void cFifteen::Move( int tile, int dst,
         int jstart = jt;
 
         // while not at destination
-        int count = 0;
+        int count = -1;
         while( jt != dst )
         {
             if( count++ >= 50 )
@@ -201,15 +211,10 @@ void cFifteen::Move( int tile, int dst,
             // fix tile we are moving so that space path does not move it
             Fix( jt );
 
-            // path to move tile
-            if( myfInstrument )
-                cout << "\nTile Path: ";
-            vector<int> TilePath = Path( jt, dst );
-
             // path to move space
             if( myfInstrument )
                 cout << "\nSpace Path: ";
-            vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[0] );
+            vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[count] );
 
             // move space
             for( int j : SpacePath )
@@ -349,9 +354,12 @@ bool cFifteen::Solve()
         if( loc12 == 14 )
             throw runtime_error("\nUnsolveable");
 
-        cout << "\n";
-        Text();
-        cout << "================================================\n";
+        if( myfAnimate || myfInstrument)
+        {
+            cout << "\n";
+            Text();
+            cout << "================================================\n";
+        }
         return true;
     }
     catch( runtime_error& e )
