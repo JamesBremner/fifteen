@@ -16,6 +16,56 @@ public:
     int myCost;
 };
 
+class cBox
+{
+public:
+
+
+    /// represent the fifteen puzzle box and tiles with a boost graph
+    typedef boost::adjacency_list
+    <
+    boost::listS,
+          boost::vecS,
+          boost::bidirectionalS,
+          cSpot,
+          cEdge > graph_t;
+
+    graph_t G;
+
+    cBox();
+
+    void Click( int spot );
+
+    /** spot index from row, column
+    @param[in] r row
+    @param[in] c col
+    @return spot index, -1 if not valid
+    */
+    int NodeFromColRow( int r, int c );
+
+    /// spot index
+    int NodeFromColRow( cSpot& s )
+    {
+        return NodeFromColRow( s.r, s.c );
+    }
+
+    // find spot that holds tile
+    int SpotFromTile( int t )
+
+    void Tile( int spot, int tile )
+    {
+        G[spot].myTile = tile;
+    }
+    int Tile( int spot )
+    {
+        return G[spot].myTile;
+    }
+
+    std::vector<int> Path( int src, int dst );
+
+    std::string Text();
+};
+
 /** Solve "Fifteen" puzzles
 
 The World-famous Fifteen Puzzle has stumped curious gamers since the 18th century.
@@ -33,18 +83,6 @@ and the bottom row 13-14-15 with the space in the lower right-hand corner.
  */
 class cFifteen
 {
-    /// represent the fifteen puzzle box and tiles with a boost graph
-    typedef boost::adjacency_list
-    <
-    boost::listS,
-          boost::vecS,
-          boost::bidirectionalS,
-          cSpot,
-          cEdge > graph_t;
-
-    graph_t myGB;
-
-
 public:
 
     /// CTOR, link spots that tile can slide between ( orthogonal )
@@ -57,7 +95,10 @@ public:
     void Read( const std::string& fname );
 
     /// Display puzzle
-    void Text();
+    void Text()
+    {
+        std::cout << myBox.Text();
+    }
 
     /** Solve puzzle using method described in http://www.chessandpoker.com/fifteen-puzzle-solution.html
         @return true if solved
@@ -82,24 +123,13 @@ public:
     }
 
 private:
-
+    cBox myBox;
     std::vector<int> mySolution;     /// The clicks needed to solve the puzzle
 
     bool myfAnimate;        /// true if puzzled should be displayed at every step
     bool myfInstrument;     /// true if debugging instrumentation should be displayed
 
-    /** spot index from row, column
-        @param[in] r row
-        @param[in] c col
-        @return spot index, -1 if not valid
-    */
-    int NodeFromColRow( int r, int c );
 
-    /// spot index
-    int NodeFromColRow( cSpot& s )
-    {
-        return NodeFromColRow( s.r, s.c );
-    }
 
     /// spot index where tile is at
     int NodeFromTile( int t );

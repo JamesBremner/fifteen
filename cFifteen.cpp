@@ -15,7 +15,8 @@ cFifteen::cFifteen()
 {
     myfAnimate = false;
     myfInstrument = false;
-
+}
+cBox::cBox() {
     for( int kr = 0; kr<4; kr++ )
     {
         for( int kc =0; kc < 4; kc++ )
@@ -24,22 +25,22 @@ cFifteen::cFifteen()
             int j = NodeFromColRow( kc-1, kr );
             if( j >= 0 )
             {
-                add_edge( i, j, myGB );
+                add_edge( i, j, G );
             }
             j = NodeFromColRow( kc+1, kr );
             if( j >= 0 )
             {
-                add_edge( i, j, myGB );
+                add_edge( i, j, G );
             }
             j = NodeFromColRow( kc, kr-1 );
             if( j >= 0 )
             {
-                add_edge( i, j, myGB );
+                add_edge( i, j, G );
             }
             j = NodeFromColRow( kc, kr+1 );
             if( j >= 0 )
             {
-                add_edge( i, j, myGB );
+                add_edge( i, j, G );
             }
         }
     }
@@ -254,20 +255,7 @@ vector<int> cFifteen::Path( int src, int dst )
     if( src == dst )
         return path;
 
-    vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(myGB));
-    boost::dijkstra_shortest_paths(
-        myGB, src,
-        boost::weight_map(boost::get(&cEdge::myCost, myGB))
-        .predecessor_map(boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,myGB)))
-    );
-
-    graph_t::vertex_descriptor v = dst;
-    for( auto u = predecessors[v]; u != v; v=u, u=predecessors[v])
-    {
-        auto edge_pair = boost::edge(u,v,myGB);
-        path.push_back( boost::target(edge_pair.first, myGB) );
-    }
-    reverse( path.begin(), path.end() );
+    myBox.Path( src, dst );
 
     if( ! path.size() )
         throw std::runtime_error( "no path" );
@@ -279,21 +267,40 @@ vector<int> cFifteen::Path( int src, int dst )
     }
 
     return path;
+}
 
+vector<int> cBox::Path( int src, int dst )
+{
+    vector<int> path;
+    vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(G));
+    boost::dijkstra_shortest_paths(
+        G, src,
+        boost::weight_map(boost::get(&cEdge::myCost, G))
+        .predecessor_map(boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,G)))
+    );
+
+    graph_t::vertex_descriptor v = dst;
+    for( auto u = predecessors[v]; u != v; v=u, u=predecessors[v])
+    {
+        auto edge_pair = boost::edge(u,v,G);
+        path.push_back( boost::target(edge_pair.first, G) );
+    }
+    reverse( path.begin(), path.end() );
+    return path;
 }
 
 void cFifteen::CostInit()
 {
     boost::graph_traits<graph_t>::edge_iterator ei, ei_end;
-    for (boost::tie(ei, ei_end) = edges(myGB); ei != ei_end; ++ei)
+    for (boost::tie(ei, ei_end) = edges(G); ei != ei_end; ++ei)
     {
-        //cout <<  boost::source(*ei, myGB ) <<" "<< boost::target(*ei, myGB ) << " set cost 1\n";
+        //cout <<  boost::source(*ei, G ) <<" "<< boost::target(*ei, G ) << " set cost 1\n";
 
-        if(  ColRowFromNode(boost::source(*ei, myGB)).r == 0 ||
-                ColRowFromNode(boost::target(*ei, myGB)).r == 0 )
-            myGB[*ei].myCost = 10;
+        if(  ColRowFromNode(boost::source(*ei, G)).r == 0 ||
+                ColRowFromNode(boost::target(*ei, G)).r == 0 )
+            G[*ei].myCost = 10;
         else
-            myGB[*ei].myCost = 1;
+            G[*ei].myCost = 1;
     }
 }
 
@@ -303,27 +310,18 @@ void cFifteen::Fix( int j )
         cout << "Fix" << j << " ";
 
     boost::graph_traits<graph_t>::out_edge_iterator ei, ei_end;
-    for (boost::tie(ei, ei_end) = out_edges(j, myGB);
+    for (boost::tie(ei, ei_end) = out_edges(j, G);
             ei != ei_end; ++ei)
     {
-        //cout <<  boost::source(*ei, myGB ) <<" "<< boost::target(*ei, myGB ) << " set cost 100\n";
-        myGB[*ei].myCost = 100;
+        //cout <<  boost::source(*ei, G ) <<" "<< boost::target(*ei, G ) << " set cost 100\n";
+        G[*ei].myCost = 100;
     }
 }
 
 void cFifteen::Click( int jc )
 {
-    cSpot cr = ColRowFromNode( jc );
-    int j0 = NodeFromTile( 0 );
-    cSpot cr0 = ColRowFromNode( j0 );
-    int dx = cr0.r - cr.r;
-    int dy = cr0.c - cr.c;
-    if( ((dx == 1 || dx == -1 ) && dy == 0 ) ||
-            (( dy == 1 || dy == -1) && dx == 0 ) )
-    {
-        myGB[ j0 ].myTile = myGB[ jc ].myTile;
-        myGB[ jc ].myTile = 0;
-    }
+    myBox.Click( jc );
+
     if( myfAnimate )
     {
         cout << "Click " << jc << "\n";
@@ -332,14 +330,29 @@ void cFifteen::Click( int jc )
     mySolution.push_back( jc );
 }
 
-int cFifteen::NodeFromTile( int t )
+void cBox::Click( int spot )
 {
-    for ( auto vp = vertices(myGB); vp.first != vp.second; ++vp.first)
-        if( myGB[*vp.first].myTile == t )
+    cSpot cr = ColRowFromNode( spot );
+    int j0 = NodeFromTile( 0 );
+    cSpot cr0 = ColRowFromNode( j0 );
+    int dx = cr0.r - cr.r;
+    int dy = cr0.c - cr.c;
+    if( ((dx == 1 || dx == -1 ) && dy == 0 ) ||
+            (( dy == 1 || dy == -1) && dx == 0 ) )
+    {
+        G[ j0 ].myTile = G[ spot ].myTile;
+        G[ spot ].myTile = 0;
+    }
+}
+
+int cBox::SpotFromTile( int t )
+{
+    for ( auto vp = vertices(G); vp.first != vp.second; ++vp.first)
+        if( G[*vp.first].myTile == t )
             return (int) *vp.first;
 }
 
-int cFifteen::NodeFromColRow( int r, int c )
+int cBox::NodeFromColRow( int r, int c )
 {
     int ret;
     if( r < 0 || r > 3 || c < 0 || c > 3 )
@@ -350,22 +363,23 @@ int cFifteen::NodeFromColRow( int r, int c )
     return ret;
 }
 
-void cFifteen::Text()
+string cBox::Text()
 {
+    stringstream ss;
     for( int y = 0; y < 4; y++ )
     {
         for( int x = 0; x < 4; x++  )
         {
-            int t = myGB[ NodeFromColRow( y, x ) ].myTile;
+            int t = G[ NodeFromColRow( y, x ) ].myTile;
             if( t )
-                cout <<setw(3) << t;
+                ss <<setw(3) << t;
             else
-                cout << "   ";
+                ss << "   ";
         }
-        cout << "\n";
+        ss << "\n";
     }
-    cout << "\n";
-
+    ss << "\n";
+    return ss.str();
 }
 
 bool cFifteen::IsSolveable()
@@ -394,8 +408,8 @@ int cFifteen::InvCount()
     {
         for (int j = i + 1; j < 16; j++)
         {
-            int ti = myGB[ i ].myTile;
-            int tj = myGB[ j ].myTile;
+            int ti = myBox.Tile( i );
+            int tj = myBox.Tile( j );
             if( ti == 0 || tj == 0 )
                 continue;
             if( ti > tj )
@@ -412,15 +426,15 @@ void cFifteen::Random()
     while( ! Solveable )
     {
         for( int n = 0; n < 16; n++ )
-            myGB[ n ].myTile = 0;
+             myBox.Tile( n, 0);
         for( int tile = 1; tile <= 15; tile++ )
         {
             while( 1 )
             {
                 int n = rand() % 16;
-                if( myGB[ n ].myTile == 0 )
+                if( myBox.Tile( n ) == 0 )
                 {
-                    myGB[ n ].myTile = tile;
+                    myBox.Tile( n, tile );
                     break;
                 }
             }
@@ -444,7 +458,7 @@ void cFifteen::Read( const string& fname )
     for( int k = 0; k < 16; k++ )
     {
         f >> tile;
-        myGB[ k ].myTile = tile;
+        myBox.Tile( k, tile );
     }
     if( ! IsSolveable() )
         throw runtime_error("Not solveable");
