@@ -289,8 +289,8 @@ void cFifteen::CostInit()
     {
         //cout <<  boost::source(*ei, myGB ) <<" "<< boost::target(*ei, myGB ) << " set cost 1\n";
 
-        if(  ColRowFromNode(boost::source(*ei, myGB)).second == 0 ||
-                ColRowFromNode(boost::target(*ei, myGB)).second == 0 )
+        if(  ColRowFromNode(boost::source(*ei, myGB)).r == 0 ||
+                ColRowFromNode(boost::target(*ei, myGB)).r == 0 )
             myGB[*ei].myCost = 10;
         else
             myGB[*ei].myCost = 1;
@@ -313,11 +313,11 @@ void cFifteen::Fix( int j )
 
 void cFifteen::Click( int jc )
 {
-    std::pair<int,int> cr = ColRowFromNode( jc );
+    cSpot cr = ColRowFromNode( jc );
     int j0 = NodeFromTile( 0 );
-    std::pair<int,int> cr0 = ColRowFromNode( j0 );
-    int dx = cr0.first - cr.first;
-    int dy = cr0.second - cr.second;
+    cSpot cr0 = ColRowFromNode( j0 );
+    int dx = cr0.r - cr.r;
+    int dy = cr0.c - cr.c;
     if( ((dx == 1 || dx == -1 ) && dy == 0 ) ||
             (( dy == 1 || dy == -1) && dx == 0 ) )
     {
@@ -337,6 +337,17 @@ int cFifteen::NodeFromTile( int t )
     for ( auto vp = vertices(myGB); vp.first != vp.second; ++vp.first)
         if( myGB[*vp.first].myTile == t )
             return (int) *vp.first;
+}
+
+int cFifteen::NodeFromColRow( int r, int c )
+{
+    int ret;
+    if( r < 0 || r > 3 || c < 0 || c > 3 )
+        ret = -1;
+    else
+        ret = r*4+c;
+    //cout << "NCR  "<< r <<" "<< c <<" " << ret << "\n";
+    return ret;
 }
 
 void cFifteen::Text()
@@ -360,7 +371,7 @@ void cFifteen::Text()
 bool cFifteen::IsSolveable()
 {
     //Text();
-    int zr = ColRowFromNode( NodeFromTile( 0 ) ).second;
+    int zr = ColRowFromNode( NodeFromTile( 0 ) ).r;
     int ic = InvCount();
     // cout << "IsSolveable "<< ic << " " << zr << "\n";
     if( ic % 2 )

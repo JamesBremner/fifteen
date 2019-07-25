@@ -1,9 +1,15 @@
 #include <boost/graph/adjacency_list.hpp>
-class cVertex
+
+/// A spot in the puzzle box which can be occupied by a tile, or not
+class cSpot
 {
 public:
-    int myTile;
+    int c;              // column in grid, 0-based
+    int r;              // row in grid, 0-based
+    int myTile;         // Tile occupying spot, 1-based with 0 for empty
 };
+
+/// The orthogonal connection between two spots along which a tile can be slid
 class cEdge
 {
 public:
@@ -33,15 +39,11 @@ class cFifteen
     boost::listS,
           boost::vecS,
           boost::bidirectionalS,
-          cVertex,
+          cSpot,
           cEdge > graph_t;
 
     graph_t myGB;
 
-    std::vector<int> mySolution;     /// The clicks needed to solve the puzzle
-
-    bool myfAnimate;        /// true if puzzled should be displayed at every step
-    bool myfInstrument;     /// true if debugging instrumentation should be displayed
 
 public:
 
@@ -51,7 +53,7 @@ public:
     /// Generate a random solveable initial tile arrangement
     void Random();
 
-    /// Assign tiles from file
+    /// Assign initial tile arrangement from file
     void Read( const std::string& fname );
 
     /// Display puzzle
@@ -67,45 +69,48 @@ public:
     */
     void Click( int jc );
 
+    /// Switch on display of puzzle at each step
     void Animate()
     {
         myfAnimate = true;
     }
+
+    /// Switch on debug instrumentation display
     void Instrument()
     {
         myfInstrument = true;
     }
+
 private:
+
+    std::vector<int> mySolution;     /// The clicks needed to solve the puzzle
+
+    bool myfAnimate;        /// true if puzzled should be displayed at every step
+    bool myfInstrument;     /// true if debugging instrumentation should be displayed
 
     /** spot index from row, column
         @param[in] r row
         @param[in] c col
         @return spot index, -1 if not valid
     */
-    int NodeFromColRow( int r, int c )
-    {
-        int ret;
-        if( r < 0 || r > 3 || c < 0 || c > 3 )
-            ret = -1;
-        else
-            ret = r*4+c;
-        //cout << "NCR  "<< r <<" "<< c <<" " << ret << "\n";
-        return ret;
-    }
+    int NodeFromColRow( int r, int c );
 
-    /// spot index from row, column pair
-    int NodeFromColRow( std::pair<int,int> cr )
+    /// spot index
+    int NodeFromColRow( cSpot& s )
     {
-        return NodeFromColRow( cr.second, cr.first );
+        return NodeFromColRow( s.r, s.c );
     }
 
     /// spot index where tile is at
     int NodeFromTile( int t );
 
     /// row, col from spot index
-    std::pair<int,int> ColRowFromNode( int j )
+    cSpot ColRowFromNode( int j )
     {
-        return std::make_pair( j % 4, j / 4 );
+        cSpot s;
+        s.c = j%4;
+        s.r = j/4;
+        return s;
     }
 
     /// set all sliding costs to 1

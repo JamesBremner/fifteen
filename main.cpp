@@ -13,7 +13,7 @@ int main( int argc, char* argv[] )
         srand (time(NULL));
         int count = 0;
         int success = 0;
-        for( int k=0; k < 1000; k++ )
+        for( int k=0; k < 100; k++ )
         {
             // genrate a random solveable 15 puzzle initial arrangement
             F.Random();
