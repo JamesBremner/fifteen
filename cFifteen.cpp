@@ -289,11 +289,7 @@ void cFifteen::CostInit()
     {
         //cout <<  boost::source(*ei, myGB ) <<" "<< boost::target(*ei, myGB ) << " set cost 1\n";
 
-        if(  ColRowFromNode(boost::source(*ei, myGB)).r == 0 ||
-                ColRowFromNode(boost::target(*ei, myGB)).r == 0 )
-            myGB[*ei].myCost = 10;
-        else
-            myGB[*ei].myCost = 1;
+        myGB[*ei].myCost = 1;
     }
 }
 
