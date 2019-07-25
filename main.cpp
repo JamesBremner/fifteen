@@ -130,6 +130,12 @@ private:
     void Move( int tile, int dst,
                vector<int>& dnd );
 
+    /** Move tile temporarily out of the way
+        @param[in] tile
+        @param[in] dnd spots that must not be disturbed containing previouly arranged tiles
+    */
+    void MoveOut( int tile, vector<int>& dnd );
+
     /// true if solveable https://www.geeksforgeeks.org/check-instance-15-puzzle-solvable/
     bool IsSolveable();
     int InvCount();
@@ -246,8 +252,8 @@ bool cFifteen::Solve()
         vector<int> dnd;
         Move( 1, 0, dnd );
         Move( 2, 1, dnd );
-        Move( 4, 13, dnd );
-        dnd.erase( dnd.end()-1 );
+
+        MoveOut( 4, dnd );
         Move( 3, 3, dnd );
         Move( 4, 7, dnd );
 
@@ -265,8 +271,8 @@ bool cFifteen::Solve()
 
         Move( 5, 4, dnd );
         Move( 6, 5, dnd );
-        Move( 8, 15, dnd );
-        dnd.erase( dnd.end()-1 );
+
+        MoveOut( 8, dnd );
         Move( 7, 7, dnd );
         Move( 8, 11, dnd );
 
@@ -286,8 +292,7 @@ bool cFifteen::Solve()
         dnd[ dnd.size()-2 ] = 6;
         dnd[ dnd.size()-1 ] = 7;
 
-        Move( 13, 15, dnd );
-        dnd.erase( dnd.end()-1 );
+        MoveOut( 13, dnd );
         Move( 9, 12, dnd );
         Move( 13, 13, dnd );
 
@@ -309,8 +314,7 @@ bool cFifteen::Solve()
         dnd[ dnd.size()-2 ] = 8;
         dnd[ dnd.size()-1 ] = 12;
 
-        Move( 14, 15, dnd );
-        dnd.erase( dnd.end()-1 );
+        MoveOut( 14, dnd );
         Move( 10, 13, dnd );
         Move( 14, 14, dnd );
 
@@ -357,6 +361,12 @@ bool cFifteen::Solve()
         return false;
     }
 
+}
+
+void cFifteen::MoveOut( int tile, vector<int>& dnd )
+{
+    vector<int> tdnd = dnd;
+    Move( tile, 15, tdnd );
 }
 
 vector<int> cFifteen::Path( int src, int dst )
