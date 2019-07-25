@@ -29,8 +29,8 @@ public:
     /// set sliding costs so tile at spot index will not be moved
     void Fix( int spot );
 
-    /// click spot so tile there will move to adjacent space
-    void Click( int spot );
+    /// slide tile in spot to adjacent space
+    void Slide( int spot );
 
     /** spot index from row, column
     @param[in] r row
@@ -133,7 +133,7 @@ public:
     /** Click on tile, slide to adjacent empty spot
         param[in] index of tile spot, 0 to 15
     */
-    void Click( int jc );
+    void Slide( int jc );
 
     /// Switch on display of puzzle at each step
     void Animate()
@@ -180,6 +180,17 @@ private:
         @param[in] dnd spots that must not be disturbed containing previouly arranged tiles
     */
     void MoveOut( int tile, std::vector<int>& dnd );
+
+    /** Rotate tiles
+        @param[in] dst move tile at s1 to dst
+        @param[in] s1  move tile at s2 to s1
+        @param[in] s2  move to s1
+        @param[in] dnd spots that must not be disturbed containing previouly arranged tiles
+
+        Move tile at s1 to dst, tile as s2 to s1
+    */
+    void Rotate( int dst, int s1, int s2,
+                std::vector<int>& dnd );
 
     /// true if solveable https://www.geeksforgeeks.org/check-instance-15-puzzle-solvable/
     bool IsSolveable();

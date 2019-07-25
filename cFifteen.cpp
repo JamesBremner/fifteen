@@ -16,7 +16,8 @@ cFifteen::cFifteen()
     myfAnimate = false;
     myfInstrument = false;
 }
-cBox::cBox() {
+cBox::cBox()
+{
     for( int kr = 0; kr<4; kr++ )
     {
         for( int kc =0; kc < 4; kc++ )
@@ -47,13 +48,14 @@ cBox::cBox() {
 }
 
 void cFifteen::Move( int tile, int dst,
-                     vector<int>& dnd )
+                     std::vector<int>& dnd )
 {
     //cout << "Move tile " << tile << " to spot " << dst << ", ";
 
     // do not disturb tiles that are already in position
     myBox.CostInit();
-    for( int f : dnd ) {
+    for( int f : dnd )
+    {
         if( myfInstrument )
             cout << " Fix" << f <<" ";
         myBox.Fix( f );
@@ -92,10 +94,10 @@ void cFifteen::Move( int tile, int dst,
 
             // move space
             for( int j : SpacePath )
-                Click( j );
+                Slide( j );
 
             // move tile
-            Click( jt );
+            Slide( jt );
 
             // new tile location
             jt = myBox.SpotFromTile( tile );
@@ -129,101 +131,47 @@ bool cFifteen::Solve()
     try
     {
         vector<int> dnd;
+
+        // tiles 1-2
         Move( 1, 0, dnd );
         Move( 2, 1, dnd );
 
+        // tiles 3-4
         MoveOut( 4, dnd );
         Move( 3, 3, dnd );
         Move( 4, 7, dnd );
+        Rotate( 2, 3, 7, dnd );
 
-        myBox.CostInit();
-        myBox.Fix( 0 );
-        myBox.Fix( 1 );
-        myBox.Fix( 3 );
-        myBox.Fix( 7 );
-        for( int j : Path( myBox.SpotFromTile( 0 ), 2 ) )
-            Click( j );
-        Click( 3 );
-        Click( 7 );
-        dnd[ dnd.size()-2 ] = 2;
-        dnd[ dnd.size()-1 ] = 3;
-
+        // tiles 5-6
         Move( 5, 4, dnd );
         Move( 6, 5, dnd );
 
+        // tiles 7-8
         MoveOut( 8, dnd );
         Move( 7, 7, dnd );
         Move( 8, 11, dnd );
+        Rotate( 6, 7, 11, dnd );
 
-        myBox.CostInit();
-        myBox.Fix( 0 );
-        myBox.Fix( 1 );
-        myBox.Fix( 2 );
-        myBox.Fix( 3 );
-        myBox.Fix( 4 );
-        myBox.Fix( 5 );
-        myBox.Fix( 7 );
-        myBox.Fix( 11 );
-        for( int j : Path( myBox.SpotFromTile( 0 ), 6 ) )
-            Click( j );
-        Click( 7 );
-        Click( 11 );
-        dnd[ dnd.size()-2 ] = 6;
-        dnd[ dnd.size()-1 ] = 7;
-
+        // tiles 9, 13
         MoveOut( 13, dnd );
         Move( 9, 12, dnd );
         Move( 13, 13, dnd );
+        Rotate( 8, 12, 13, dnd );
 
-        myBox.CostInit();
-        myBox.Fix( 0 );
-        myBox.Fix( 1 );
-        myBox.Fix( 2 );
-        myBox.Fix( 3 );
-        myBox.Fix( 4 );
-        myBox.Fix( 5 );
-        myBox.Fix( 6 );
-        myBox.Fix( 7 );
-        myBox.Fix( 12 );
-        myBox.Fix( 13 );
-        for( int j : Path( myBox.SpotFromTile( 0 ), 8 ) )
-            Click( j );
-        Click( 12 );
-        Click( 13 );
-        dnd[ dnd.size()-2 ] = 8;
-        dnd[ dnd.size()-1 ] = 12;
-
+        // tiles 10-14
         MoveOut( 14, dnd );
         Move( 10, 13, dnd );
         Move( 14, 14, dnd );
+        Rotate( 9, 13, 14, dnd );
 
-        myBox.CostInit();
-        myBox.Fix( 0 );
-        myBox.Fix( 1 );
-        myBox.Fix( 2 );
-        myBox.Fix( 3 );
-        myBox.Fix( 4 );
-        myBox.Fix( 5 );
-        myBox.Fix( 6 );
-        myBox.Fix( 7 );
-        myBox.Fix( 8 );
-        myBox.Fix( 12 );
-        myBox.Fix( 13 );
-        myBox.Fix( 14 );
-        for( int j : Path( myBox.SpotFromTile( 0 ), 9 ) )
-            Click( j );
-        Click( 13 );
-        Click( 14 );
-        dnd[ dnd.size()-2 ] = 9;
-        dnd[ dnd.size()-1 ] = 13;
-
+        // remaining tiles
         Move( 11, 10, dnd );
 
         int loc12 = myBox.SpotFromTile( 12 );
 
         if( loc12 == 15 )
         {
-            Click( 15 );
+            Slide( 15 );
         }
         if( loc12 == 14 )
             throw runtime_error("\nUnsolveable");
@@ -245,7 +193,22 @@ bool cFifteen::Solve()
 
 }
 
-void cFifteen::MoveOut( int tile, vector<int>& dnd )
+void cFifteen::Rotate( int dst, int s1, int s2,
+                       std::vector<int>& dnd )
+{
+    for( int f = 0; f < dst; f++ )
+        myBox.Fix( f );
+    myBox.Fix( s1 );
+    myBox.Fix( s2 );
+    for( int j : Path( myBox.SpotFromTile( 0 ), dst ) )
+        Slide( j );
+    Slide( s1 );
+    Slide( s2 );
+    dnd[ dnd.size()-2 ] = dst;
+    dnd[ dnd.size()-1 ] = s1;
+}
+
+void cFifteen::MoveOut( int tile, std::vector<int>& dnd )
 {
     vector<int> tdnd = dnd;
     Move( tile, 15, tdnd );
@@ -258,7 +221,7 @@ vector<int> cFifteen::Path( int src, int dst )
     if( src == dst )
         return path;
 
-   path = myBox.Path( src, dst );
+    path = myBox.Path( src, dst );
 
     if( ! path.size() )
         throw std::runtime_error( "no path" );
@@ -314,19 +277,19 @@ void cBox::Fix( int j )
     }
 }
 
-void cFifteen::Click( int jc )
+void cFifteen::Slide( int jc )
 {
-    myBox.Click( jc );
+    myBox.Slide( jc );
 
     if( myfAnimate )
     {
-        cout << "Click " << jc << "\n";
+        cout << "Slide " << jc << "\n";
         Text();
     }
     mySolution.push_back( jc );
 }
 
-void cBox::Click( int spot )
+void cBox::Slide( int spot )
 {
     cSpot cr = ColRowFromNode( spot );
     int j0 = SpotFromTile( 0 );
@@ -422,7 +385,7 @@ void cFifteen::Random()
     while( ! Solveable )
     {
         for( int n = 0; n < 16; n++ )
-             myBox.Tile( n, 0);
+            myBox.Tile( n, 0);
         for( int tile = 1; tile <= 15; tile++ )
         {
             while( 1 )
