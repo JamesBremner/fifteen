@@ -333,7 +333,7 @@ void cFifteen::Click( int jc )
 void cBox::Click( int spot )
 {
     cSpot cr = ColRowFromNode( spot );
-    int j0 = NodeFromTile( 0 );
+    int j0 = SpotFromTile( 0 );
     cSpot cr0 = ColRowFromNode( j0 );
     int dx = cr0.r - cr.r;
     int dy = cr0.c - cr.c;
@@ -385,7 +385,7 @@ string cBox::Text()
 bool cFifteen::IsSolveable()
 {
     //Text();
-    int zr = ColRowFromNode( NodeFromTile( 0 ) ).r;
+    int zr = myBox.ColRowFromNode( NodeFromTile( 0 ) ).r;
     int ic = InvCount();
     // cout << "IsSolveable "<< ic << " " << zr << "\n";
     if( ic % 2 )

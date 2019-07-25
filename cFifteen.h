@@ -49,8 +49,17 @@ public:
         return NodeFromColRow( s.r, s.c );
     }
 
+    /// row, col from spot index
+    cSpot ColRowFromNode( int j )
+    {
+        cSpot s;
+        s.c = j%4;
+        s.r = j/4;
+        return s;
+    }
+
     // find spot that holds tile
-    int SpotFromTile( int t )
+    int SpotFromTile( int t );
 
     void Tile( int spot, int tile )
     {
@@ -134,14 +143,7 @@ private:
     /// spot index where tile is at
     int NodeFromTile( int t );
 
-    /// row, col from spot index
-    cSpot ColRowFromNode( int j )
-    {
-        cSpot s;
-        s.c = j%4;
-        s.r = j/4;
-        return s;
-    }
+
 
     /// set all sliding costs to 1
     void CostInit();
