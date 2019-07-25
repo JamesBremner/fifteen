@@ -52,19 +52,22 @@ void cFifteen::Move( int tile, int dst,
     //cout << "Move tile " << tile << " to spot " << dst << ", ";
 
     // do not disturb tiles that are already in position
-    CostInit();
-    for( int f : dnd )
-        Fix( f );
+    myBox.CostInit();
+    for( int f : dnd ) {
+        if( myfInstrument )
+            cout << " Fix" << f <<" ";
+        myBox.Fix( f );
+    }
 
     // path to move tile
     if( myfInstrument )
         cout << "\nTile Path: ";
-    vector<int> TilePath = Path( NodeFromTile( tile ), dst );
+    vector<int> TilePath = Path( myBox.SpotFromTile( tile ), dst );
 
     try
     {
         // tile location
-        int jt = NodeFromTile( tile );
+        int jt = myBox.SpotFromTile( tile );
         int jstart = jt;
 
         // while not at destination
@@ -75,17 +78,17 @@ void cFifteen::Move( int tile, int dst,
                 throw 1;
 
             // do not disturb tiles that are already in position
-            CostInit();
+            myBox. CostInit();
             for( int f : dnd )
-                Fix( f );
+                myBox.Fix( f );
 
             // fix tile we are moving so that space path does not move it
-            Fix( jt );
+            myBox.Fix( jt );
 
             // path to move space
             if( myfInstrument )
                 cout << "\nSpace Path: ";
-            vector<int> SpacePath = Path( NodeFromTile( 0 ), TilePath[count] );
+            vector<int> SpacePath = Path( myBox.SpotFromTile( 0 ), TilePath[count] );
 
             // move space
             for( int j : SpacePath )
@@ -95,7 +98,7 @@ void cFifteen::Move( int tile, int dst,
             Click( jt );
 
             // new tile location
-            jt = NodeFromTile( tile );
+            jt = myBox.SpotFromTile( tile );
 
             // check that we are making progress
             if( jt == jstart )
@@ -133,12 +136,12 @@ bool cFifteen::Solve()
         Move( 3, 3, dnd );
         Move( 4, 7, dnd );
 
-        CostInit();
-        Fix( 0 );
-        Fix( 1 );
-        Fix( 3 );
-        Fix( 7 );
-        for( int j : Path( NodeFromTile( 0 ), 2 ) )
+        myBox.CostInit();
+        myBox.Fix( 0 );
+        myBox.Fix( 1 );
+        myBox.Fix( 3 );
+        myBox.Fix( 7 );
+        for( int j : Path( myBox.SpotFromTile( 0 ), 2 ) )
             Click( j );
         Click( 3 );
         Click( 7 );
@@ -152,16 +155,16 @@ bool cFifteen::Solve()
         Move( 7, 7, dnd );
         Move( 8, 11, dnd );
 
-        CostInit();
-        Fix( 0 );
-        Fix( 1 );
-        Fix( 2 );
-        Fix( 3 );
-        Fix( 4 );
-        Fix( 5 );
-        Fix( 7 );
-        Fix( 11 );
-        for( int j : Path( NodeFromTile( 0 ), 6 ) )
+        myBox.CostInit();
+        myBox.Fix( 0 );
+        myBox.Fix( 1 );
+        myBox.Fix( 2 );
+        myBox.Fix( 3 );
+        myBox.Fix( 4 );
+        myBox.Fix( 5 );
+        myBox.Fix( 7 );
+        myBox.Fix( 11 );
+        for( int j : Path( myBox.SpotFromTile( 0 ), 6 ) )
             Click( j );
         Click( 7 );
         Click( 11 );
@@ -172,18 +175,18 @@ bool cFifteen::Solve()
         Move( 9, 12, dnd );
         Move( 13, 13, dnd );
 
-        CostInit();
-        Fix( 0 );
-        Fix( 1 );
-        Fix( 2 );
-        Fix( 3 );
-        Fix( 4 );
-        Fix( 5 );
-        Fix( 6 );
-        Fix( 7 );
-        Fix( 12 );
-        Fix( 13 );
-        for( int j : Path( NodeFromTile( 0 ), 8 ) )
+        myBox.CostInit();
+        myBox.Fix( 0 );
+        myBox.Fix( 1 );
+        myBox.Fix( 2 );
+        myBox.Fix( 3 );
+        myBox.Fix( 4 );
+        myBox.Fix( 5 );
+        myBox.Fix( 6 );
+        myBox.Fix( 7 );
+        myBox.Fix( 12 );
+        myBox.Fix( 13 );
+        for( int j : Path( myBox.SpotFromTile( 0 ), 8 ) )
             Click( j );
         Click( 12 );
         Click( 13 );
@@ -194,20 +197,20 @@ bool cFifteen::Solve()
         Move( 10, 13, dnd );
         Move( 14, 14, dnd );
 
-        CostInit();
-        Fix( 0 );
-        Fix( 1 );
-        Fix( 2 );
-        Fix( 3 );
-        Fix( 4 );
-        Fix( 5 );
-        Fix( 6 );
-        Fix( 7 );
-        Fix( 8 );
-        Fix( 12 );
-        Fix( 13 );
-        Fix( 14 );
-        for( int j : Path( NodeFromTile( 0 ), 9 ) )
+        myBox.CostInit();
+        myBox.Fix( 0 );
+        myBox.Fix( 1 );
+        myBox.Fix( 2 );
+        myBox.Fix( 3 );
+        myBox.Fix( 4 );
+        myBox.Fix( 5 );
+        myBox.Fix( 6 );
+        myBox.Fix( 7 );
+        myBox.Fix( 8 );
+        myBox.Fix( 12 );
+        myBox.Fix( 13 );
+        myBox.Fix( 14 );
+        for( int j : Path( myBox.SpotFromTile( 0 ), 9 ) )
             Click( j );
         Click( 13 );
         Click( 14 );
@@ -216,7 +219,7 @@ bool cFifteen::Solve()
 
         Move( 11, 10, dnd );
 
-        int loc12 = NodeFromTile( 12 );
+        int loc12 = myBox.SpotFromTile( 12 );
 
         if( loc12 == 15 )
         {
@@ -255,7 +258,7 @@ vector<int> cFifteen::Path( int src, int dst )
     if( src == dst )
         return path;
 
-    myBox.Path( src, dst );
+   path = myBox.Path( src, dst );
 
     if( ! path.size() )
         throw std::runtime_error( "no path" );
@@ -289,26 +292,19 @@ vector<int> cBox::Path( int src, int dst )
     return path;
 }
 
-void cFifteen::CostInit()
+void cBox::CostInit()
 {
     boost::graph_traits<graph_t>::edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = edges(G); ei != ei_end; ++ei)
     {
         //cout <<  boost::source(*ei, G ) <<" "<< boost::target(*ei, G ) << " set cost 1\n";
 
-        if(  ColRowFromNode(boost::source(*ei, G)).r == 0 ||
-                ColRowFromNode(boost::target(*ei, G)).r == 0 )
-            G[*ei].myCost = 10;
-        else
-            G[*ei].myCost = 1;
+        G[*ei].myCost = 1;
     }
 }
 
-void cFifteen::Fix( int j )
+void cBox::Fix( int j )
 {
-    if( myfInstrument)
-        cout << "Fix" << j << " ";
-
     boost::graph_traits<graph_t>::out_edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = out_edges(j, G);
             ei != ei_end; ++ei)
@@ -385,7 +381,7 @@ string cBox::Text()
 bool cFifteen::IsSolveable()
 {
     //Text();
-    int zr = myBox.ColRowFromNode( NodeFromTile( 0 ) ).r;
+    int zr = myBox.ColRowFromNode( myBox.SpotFromTile( 0 ) ).r;
     int ic = InvCount();
     // cout << "IsSolveable "<< ic << " " << zr << "\n";
     if( ic % 2 )

@@ -16,24 +16,20 @@ public:
     int myCost;
 };
 
+/// Puzzle box containing sliding tiles
 class cBox
 {
 public:
 
-
-    /// represent the fifteen puzzle box and tiles with a boost graph
-    typedef boost::adjacency_list
-    <
-    boost::listS,
-          boost::vecS,
-          boost::bidirectionalS,
-          cSpot,
-          cEdge > graph_t;
-
-    graph_t G;
-
     cBox();
 
+    /// set all sliding costs to 1
+    void CostInit();
+
+    /// set sliding costs so tile at spot index will not be moved
+    void Fix( int spot );
+
+    /// click spot so tile there will move to adjacent space
     void Click( int spot );
 
     /** spot index from row, column
@@ -58,21 +54,47 @@ public:
         return s;
     }
 
-    // find spot that holds tile
+    /// find spot index that holds tile
     int SpotFromTile( int t );
 
+    /// set tile in spot
     void Tile( int spot, int tile )
     {
         G[spot].myTile = tile;
     }
+
+    /// get tile in spot
     int Tile( int spot )
     {
         return G[spot].myTile;
     }
 
+    /** path from src to dst, using dijsktra algorithm
+        @param[in] src
+        @param[in] dst
+        @return vector of spots to be visited
+
+        Uses the dijsktra algorithm implemented by boost::graph
+
+        An A* would be faster for large puzzles,
+        but dijsktra is plenty fast for the 15 puzzle.
+    */
     std::vector<int> Path( int src, int dst );
 
+    /// Human readable string to dislay tile layout in box
     std::string Text();
+
+private:
+        /// represent the fifteen puzzle box and tiles with a boost graph
+    typedef boost::adjacency_list
+    <
+    boost::listS,
+          boost::vecS,
+          boost::bidirectionalS,
+          cSpot,
+          cEdge > graph_t;
+
+    graph_t G;
 };
 
 /** Solve "Fifteen" puzzles
@@ -103,12 +125,6 @@ public:
     /// Assign initial tile arrangement from file
     void Read( const std::string& fname );
 
-    /// Display puzzle
-    void Text()
-    {
-        std::cout << myBox.Text();
-    }
-
     /** Solve puzzle using method described in http://www.chessandpoker.com/fifteen-puzzle-solution.html
         @return true if solved
     */
@@ -131,35 +147,23 @@ public:
         myfInstrument = true;
     }
 
+    /// Display puzzle
+    void Text()
+    {
+        std::cout << myBox.Text();
+    }
+
 private:
-    cBox myBox;
+    cBox myBox;                     /// Puzzle box with sliding tiles
     std::vector<int> mySolution;     /// The clicks needed to solve the puzzle
 
     bool myfAnimate;        /// true if puzzled should be displayed at every step
     bool myfInstrument;     /// true if debugging instrumentation should be displayed
 
-
-
-    /// spot index where tile is at
-    int NodeFromTile( int t );
-
-
-
-    /// set all sliding costs to 1
-    void CostInit();
-
-    /// set sliding costs so tile at spot index will not be moved
-    void Fix( int j );
-
     /** path from src to dst, using dijsktra algorithm
         @param[in] src
         @param[in] dst
         @return vector of spots to be visited
-
-        Uses the dijsktra algorithm implemented by boost::graph
-
-        An A* would be faster for large puzzles,
-        but dijsktra is plenty fast for the 15 puzzle.
     */
     std::vector<int> Path( int src, int dst );
 
