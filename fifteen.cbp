@@ -35,7 +35,15 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add directory="$(#boost)" />
+			<Add directory="../raven-set" />
 		</Compiler>
+		<Linker>
+			<Add library="boost_thread-mgw82-mt-x64-1_70" />
+			<Add directory="$(#boost.lib)" />
+		</Linker>
+		<Unit filename="../raven-set/cRunWatch.cpp" />
+		<Unit filename="cFifteen.cpp" />
+		<Unit filename="cFifteen.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

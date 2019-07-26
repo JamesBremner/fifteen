@@ -1,11 +1,14 @@
 #include <iostream>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include "cRunWatch.h"
 #include "cFifteen.h"
 using namespace std;
 
 int main( int argc, char* argv[] )
 {
+    raven::set::cRunWatch::Start();
+
     cFifteen F;
     if( argc == 1 )
     {
@@ -44,6 +47,8 @@ int main( int argc, char* argv[] )
         // Solve
         F.Solve();
     }
+
+    raven::set::cRunWatch::Report();
 
     return 0;
 }

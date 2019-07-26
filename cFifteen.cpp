@@ -7,6 +7,7 @@
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
+#include "cRunWatch.h"
 #include "cFifteen.h"
 
 using namespace std;
@@ -125,6 +126,8 @@ void cFifteen::Move( int tile, int dst,
 bool cFifteen::Solve()
 {
     cout << "Solve\n";
+
+    raven::set::cRunWatch aWatcher("Solve");
 
     mySolution.clear();
 

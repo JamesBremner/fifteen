@@ -127,6 +127,8 @@ public:
 
     /** Solve puzzle using method described in http://www.chessandpoker.com/fifteen-puzzle-solution.html
         @return true if solved
+
+        The list of tiles that need to be slid are stored in attribute mySolution.
     */
     bool Solve();
 
@@ -155,7 +157,7 @@ public:
 
 private:
     cBox myBox;                     /// Puzzle box with sliding tiles
-    std::vector<int> mySolution;     /// The clicks needed to solve the puzzle
+    std::vector<int> mySolution;     /// The slides needed to solve the puzzle
 
     bool myfAnimate;        /// true if puzzled should be displayed at every step
     bool myfInstrument;     /// true if debugging instrumentation should be displayed
