@@ -23,6 +23,11 @@ public:
 
     cBox();
 
+    void UseAStar( bool f = true )
+    {
+        myfAStar = f;
+    }
+
     /// set all sliding costs to 1
     void CostInit();
 
@@ -81,11 +86,11 @@ public:
     */
     std::vector<int> Path( int src, int dst );
 
+
     /// Human readable string to dislay tile layout in box
     std::string Text();
 
-private:
-        /// represent the fifteen puzzle box and tiles with a boost graph
+    /// represent the fifteen puzzle box and tiles with a boost graph
     typedef boost::adjacency_list
     <
     boost::listS,
@@ -95,6 +100,11 @@ private:
           cEdge > graph_t;
 
     graph_t G;
+
+private:
+    bool myfAStar;
+    std::vector<int> PathAStar( int src, int dst );
+    std::vector<int> PathDijsktra( int src, int dst );
 };
 
 /** Solve "Fifteen" puzzles
@@ -118,6 +128,11 @@ public:
 
     /// CTOR, link spots that tile can slide between ( orthogonal )
     cFifteen();
+
+    void UseAStar( bool f = true )
+    {
+        myBox.UseAStar( f );
+    }
 
     /// Generate a random solveable initial tile arrangement
     void Random();
@@ -192,7 +207,7 @@ private:
         Move tile at s1 to dst, tile as s2 to s1
     */
     void Rotate( int dst, int s1, int s2,
-                std::vector<int>& dnd );
+                 std::vector<int>& dnd );
 
     /// true if solveable https://www.geeksforgeeks.org/check-instance-15-puzzle-solvable/
     bool IsSolveable();

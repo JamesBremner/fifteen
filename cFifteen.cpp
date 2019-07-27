@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/astar_search.hpp>
 
 #include "cRunWatch.h"
 #include "cFifteen.h"
@@ -18,6 +19,7 @@ cFifteen::cFifteen()
     myfInstrument = false;
 }
 cBox::cBox()
+    : myfAStar( false )
 {
     for( int kr = 0; kr<4; kr++ )
     {
@@ -44,6 +46,14 @@ cBox::cBox()
             {
                 add_edge( i, j, G );
             }
+        }
+    }
+    for( int kr = 0; kr<4; kr++ )
+    {
+        for( int kc =0; kc < 4; kc++ )
+        {
+            G[ NodeFromColRow( kc, kr ) ].c = kc;
+            G[ NodeFromColRow( kc, kr ) ].r = kr;
         }
     }
 }
@@ -237,27 +247,112 @@ vector<int> cFifteen::Path( int src, int dst )
 
     return path;
 }
-
 vector<int> cBox::Path( int src, int dst )
 {
+    if( myfAStar )
+        return PathAStar( src, dst );
+    return PathDijsktra( src, dst );
+}
+vector<int> cBox::PathDijsktra( int src, int dst )
+{
+
+    // construct vector to store path from src to dst
     vector<int> path;
+
+    // construct storage for path from src to every spot
+    // which is what the boost dijskstra algorithm reurns
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(G));
+    auto it = boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,G));
+
+    // construct storage for edge costs
+    // ( prevents previously arranged tiles from moving )
+    auto W = boost::weight_map(boost::get(&cEdge::myCost, G));
+
+    // run dijsktra algorithm
     boost::dijkstra_shortest_paths(
         G, src,
-        boost::weight_map(boost::get(&cEdge::myCost, G))
-        .predecessor_map(boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,G)))
+        W.predecessor_map(it)
     );
 
-    graph_t::vertex_descriptor v = dst;
+    // pick out path to dst
+    int v = dst;
     for( auto u = predecessors[v]; u != v; v=u, u=predecessors[v])
     {
-        auto edge_pair = boost::edge(u,v,G);
-        path.push_back( boost::target(edge_pair.first, G) );
+        path.push_back( boost::target(boost::edge(u,v,G).first, G) );
     }
     reverse( path.begin(), path.end() );
+
     return path;
 }
 
+// distance heuristic
+class distance_heuristic : public boost::astar_heuristic<cBox::graph_t, int>
+{
+public:
+    distance_heuristic(cBox::graph_t& g, int goal)
+        : G(g), m_goal(goal) {}
+    int operator()(int u)
+    {
+        return abs(G[m_goal].c - G[u].c) + abs(G[m_goal].r - G[u].r);
+    }
+private:
+    cBox::graph_t& G;
+    Vertex m_goal;
+};
+
+struct found_goal {}; // exception for termination
+
+// visitor that terminates when we find the goal
+class astar_goal_visitor : public boost::default_astar_visitor
+{
+public:
+    astar_goal_visitor(int goal, cBox::graph_t& g )
+     : m_goal(goal)
+     , G( g ) {}
+    void examine_vertex(int u, const cBox::graph_t& g)
+    {
+        if(u == m_goal)
+            throw found_goal();
+    }
+private:
+    int m_goal;
+    cBox::graph_t& G;
+};
+vector<int> cBox::PathAStar( int src, int dst )
+{
+    // construct vector to store path from src to dst
+    vector<int> path;
+
+    // construct storage for path from src to every spot
+    // which is what the boost dijskstra algorithm returns
+    vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(G));
+    auto it = boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,G));
+
+    auto W = boost::weight_map(boost::get(&cEdge::myCost, G));
+
+    try
+    {
+        // call astar named parameter interface
+        boost::astar_search_tree(
+            G, src,
+            distance_heuristic(G, dst),
+            W.
+            predecessor_map(it).
+            visitor(astar_goal_visitor(dst, G)));
+    }
+    catch(found_goal fg)     // found a path to the goal
+    {
+        // pick out path to dst
+        int v = dst;
+        for( auto u = predecessors[v]; u != v; v=u, u=predecessors[v])
+        {
+            path.push_back( boost::target(boost::edge(u,v,G).first, G) );
+        }
+        reverse( path.begin(), path.end() );
+
+        return path;
+    }
+}
 void cBox::CostInit()
 {
     boost::graph_traits<graph_t>::edge_iterator ei, ei_end;

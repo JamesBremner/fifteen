@@ -10,6 +10,8 @@ int main( int argc, char* argv[] )
     raven::set::cRunWatch::Start();
 
     cFifteen F;
+    F.UseAStar();
+
     if( argc == 1 )
     {
         /* generate and solve random puzzles */
