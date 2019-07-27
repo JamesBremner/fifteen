@@ -16,4 +16,14 @@ and the bottom row 13-14-15 with the space in the lower right-hand corner.
  
  ## Performance
  
- Solves a puzzle in 5 milliseconds.  Running on i5-6400 CPU @ 2.70 GHz
+ The algorithm used to search for paths to slide a tile to a new spot is, optionally, Dijsktra or A*.  The A* gives slightly better performance becasue the path searching is guided by a heuristic and terminates as soon as a path is discovered.
+ 
+
+ ```
+ Mean of solving 100 randomly generated solveable initial tile arrangements on a i5-6400 CPU @ 2.70 GHz
+ 
+ Dijsktra    2.1 millisecs
+ 
+ A*          1.7 millisecs
+ ```
+
