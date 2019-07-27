@@ -74,15 +74,10 @@ public:
         return G[spot].myTile;
     }
 
-    /** path from src to dst, using dijsktra algorithm
+    /** path from src to dst, using specified search algorithm algorithm
         @param[in] src
         @param[in] dst
         @return vector of spots to be visited
-
-        Uses the dijsktra algorithm implemented by boost::graph
-
-        An A* would be faster for large puzzles,
-        but dijsktra is plenty fast for the 15 puzzle.
     */
     std::vector<int> Path( int src, int dst );
 
@@ -90,6 +85,7 @@ public:
     /// Human readable string to dislay tile layout in box
     std::string Text();
 
+private:
     /// represent the fifteen puzzle box and tiles with a boost graph
     typedef boost::adjacency_list
     <
@@ -101,9 +97,12 @@ public:
 
     graph_t G;
 
-private:
-    bool myfAStar;
+    bool myfAStar;                  /// true if using AStar algorithm
+
+    /// Find path using Dijsktra
     std::vector<int> PathAStar( int src, int dst );
+
+    /// Find path using AStar
     std::vector<int> PathDijsktra( int src, int dst );
 };
 

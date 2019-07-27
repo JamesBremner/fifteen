@@ -285,39 +285,11 @@ vector<int> cBox::PathDijsktra( int src, int dst )
     return path;
 }
 
-// distance heuristic
-class distance_heuristic : public boost::astar_heuristic<cBox::graph_t, int>
-{
-public:
-    distance_heuristic(cBox::graph_t& g, int goal)
-        : G(g), m_goal(goal) {}
-    int operator()(int u)
-    {
-        return abs(G[m_goal].c - G[u].c) + abs(G[m_goal].r - G[u].r);
-    }
-private:
-    cBox::graph_t& G;
-    Vertex m_goal;
-};
 
-struct found_goal {}; // exception for termination
 
-// visitor that terminates when we find the goal
-class astar_goal_visitor : public boost::default_astar_visitor
-{
-public:
-    astar_goal_visitor(int goal, cBox::graph_t& g )
-     : m_goal(goal)
-     , G( g ) {}
-    void examine_vertex(int u, const cBox::graph_t& g)
-    {
-        if(u == m_goal)
-            throw found_goal();
-    }
-private:
-    int m_goal;
-    cBox::graph_t& G;
-};
+
+
+
 vector<int> cBox::PathAStar( int src, int dst )
 {
     // construct vector to store path from src to dst
@@ -328,7 +300,42 @@ vector<int> cBox::PathAStar( int src, int dst )
     vector<graph_t::vertex_descriptor> predecessors(boost::num_vertices(G));
     auto it = boost::make_iterator_property_map(predecessors.begin(), boost::get(boost::vertex_index,G));
 
+    // distance heuristic
+    class distance_heuristic : public boost::astar_heuristic<graph_t, int>
+    {
+    public:
+        distance_heuristic(graph_t& g, int goal)
+            : G(g), m_goal(goal) {}
+        int operator()(int u)
+        {
+            return abs(G[m_goal].c - G[u].c) + abs(G[m_goal].r - G[u].r);
+        }
+    private:
+        graph_t& G;
+        Vertex m_goal;
+    };
+
+    // construct storage for edge costs
+    // ( prevents previously arranged tiles from moving )
     auto W = boost::weight_map(boost::get(&cEdge::myCost, G));
+
+    // visitor that terminates search when we find the goal
+    struct found_goal {}; // exception for termination
+    class astar_goal_visitor : public boost::default_astar_visitor
+    {
+    public:
+        astar_goal_visitor(int goal )
+            : m_goal(goal)
+        {}
+        void examine_vertex(int u, const graph_t& g)
+        {
+            if(u == m_goal)
+                throw found_goal();
+        }
+    private:
+        int m_goal;
+    };
+    astar_goal_visitor V( dst );
 
     try
     {
@@ -338,7 +345,7 @@ vector<int> cBox::PathAStar( int src, int dst )
             distance_heuristic(G, dst),
             W.
             predecessor_map(it).
-            visitor(astar_goal_visitor(dst, G)));
+            visitor( V ));
     }
     catch(found_goal fg)     // found a path to the goal
     {
