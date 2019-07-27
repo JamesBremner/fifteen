@@ -58,19 +58,23 @@ cBox::cBox()
     }
 }
 
-void cFifteen::Move( int tile, int dst,
-                     std::vector<int>& dnd )
+void cFifteen::Fix()
 {
-    //cout << "Move tile " << tile << " to spot " << dst << ", ";
-
-    // do not disturb tiles that are already in position
     myBox.CostInit();
-    for( int f : dnd )
+    for( int f : myDND )
     {
         if( myfInstrument )
             cout << " Fix" << f <<" ";
         myBox.Fix( f );
     }
+}
+
+void cFifteen::Move( int tile, int dst )
+{
+    //cout << "Move tile " << tile << " to spot " << dst << ", ";
+
+    // do not disturb tiles that are already in position
+    Fix();
 
     // path to move tile
     if( myfInstrument )
@@ -91,9 +95,7 @@ void cFifteen::Move( int tile, int dst,
                 throw 1;
 
             // do not disturb tiles that are already in position
-            myBox. CostInit();
-            for( int f : dnd )
-                myBox.Fix( f );
+            Fix();
 
             // fix tile we are moving so that space path does not move it
             myBox.Fix( jt );
@@ -120,7 +122,7 @@ void cFifteen::Move( int tile, int dst,
 
         // the tile is now in position
         // prevent moving it again
-        dnd.push_back( jt );
+        myDND.push_back( jt );
 
     }
     catch( int e )
@@ -140,45 +142,44 @@ bool cFifteen::Solve()
     raven::set::cRunWatch aWatcher("Solve");
 
     mySolution.clear();
+    myDND.clear();
 
     try
     {
-        vector<int> dnd;
-
         // tiles 1-2
-        Move( 1, 0, dnd );
-        Move( 2, 1, dnd );
+        Move( 1, 0 );
+        Move( 2, 1 );
 
         // tiles 3-4
-        MoveOut( 4, dnd );
-        Move( 3, 3, dnd );
-        Move( 4, 7, dnd );
-        Rotate( 2, 3, 7, dnd );
+        MoveOut( 4 );
+        Move( 3, 3 );
+        Move( 4, 7 );
+        Rotate( 2, 3, 7 );
 
         // tiles 5-6
-        Move( 5, 4, dnd );
-        Move( 6, 5, dnd );
+        Move( 5, 4 );
+        Move( 6, 5 );
 
         // tiles 7-8
-        MoveOut( 8, dnd );
-        Move( 7, 7, dnd );
-        Move( 8, 11, dnd );
-        Rotate( 6, 7, 11, dnd );
+        MoveOut( 8 );
+        Move( 7, 7 );
+        Move( 8, 11 );
+        Rotate( 6, 7, 11 );
 
         // tiles 9, 13
-        MoveOut( 13, dnd );
-        Move( 9, 12, dnd );
-        Move( 13, 13, dnd );
-        Rotate( 8, 12, 13, dnd );
+        MoveOut( 13 );
+        Move( 9, 12 );
+        Move( 13, 13 );
+        Rotate( 8, 12, 13 );
 
         // tiles 10-14
-        MoveOut( 14, dnd );
-        Move( 10, 13, dnd );
-        Move( 14, 14, dnd );
-        Rotate( 9, 13, 14, dnd );
+        MoveOut( 14 );
+        Move( 10, 13 );
+        Move( 14, 14 );
+        Rotate( 9, 13, 14 );
 
         // remaining tiles
-        Move( 11, 10, dnd );
+        Move( 11, 10 );
 
         int loc12 = myBox.SpotFromTile( 12 );
 
@@ -206,8 +207,7 @@ bool cFifteen::Solve()
 
 }
 
-void cFifteen::Rotate( int dst, int s1, int s2,
-                       std::vector<int>& dnd )
+void cFifteen::Rotate( int dst, int s1, int s2 )
 {
     for( int f = 0; f < dst; f++ )
         myBox.Fix( f );
@@ -217,14 +217,15 @@ void cFifteen::Rotate( int dst, int s1, int s2,
         Slide( j );
     Slide( s1 );
     Slide( s2 );
-    dnd[ dnd.size()-2 ] = dst;
-    dnd[ dnd.size()-1 ] = s1;
+    myDND[ myDND.size()-2 ] = dst;
+    myDND[ myDND.size()-1 ] = s1;
 }
 
-void cFifteen::MoveOut( int tile, std::vector<int>& dnd )
+void cFifteen::MoveOut( int tile )
 {
-    vector<int> tdnd = dnd;
-    Move( tile, 15, tdnd );
+    vector<int> tdnd = myDND;
+    Move( tile, 15 );
+    myDND = tdnd;
 }
 
 vector<int> cFifteen::Path( int src, int dst )

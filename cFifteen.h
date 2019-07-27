@@ -56,6 +56,13 @@ public:
         cSpot s;
         s.c = j%4;
         s.r = j/4;
+//        s.c = G[j].r;
+//        s.r = G[j].c;
+//        if( s.c != j%4 || s.r != j/4 )
+//        {
+//            std::cout << "ColRowFromNode " << j <<" "<< s.c <<" "<< s.r << "\n";
+//            exit(1);
+//        }
         return s;
     }
 
@@ -172,6 +179,7 @@ public:
 private:
     cBox myBox;                     /// Puzzle box with sliding tiles
     std::vector<int> mySolution;     /// The slides needed to solve the puzzle
+    std::vector<int> myDND;
 
     bool myfAnimate;        /// true if puzzled should be displayed at every step
     bool myfInstrument;     /// true if debugging instrumentation should be displayed
@@ -186,30 +194,28 @@ private:
     /** Move tile
         @param[in] tile
         @param[in] dst spot index where tile should move to
-        @param[in/out] dnd spots that must not be disturbed containing previouly arranged tiles
     */
-    void Move( int tile, int dst,
-               std::vector<int>& dnd );
+    void Move( int tile, int dst );
 
     /** Move tile temporarily out of the way
         @param[in] tile
-        @param[in] dnd spots that must not be disturbed containing previouly arranged tiles
     */
-    void MoveOut( int tile, std::vector<int>& dnd );
+    void MoveOut( int tile );
 
     /** Rotate tiles
         @param[in] dst move tile at s1 to dst
         @param[in] s1  move tile at s2 to s1
         @param[in] s2  move to s1
-        @param[in] dnd spots that must not be disturbed containing previouly arranged tiles
 
         Move tile at s1 to dst, tile as s2 to s1
     */
-    void Rotate( int dst, int s1, int s2,
-                 std::vector<int>& dnd );
+    void Rotate( int dst, int s1, int s2 );
 
     /// true if solveable https://www.geeksforgeeks.org/check-instance-15-puzzle-solvable/
     bool IsSolveable();
     int InvCount();
+
+    /// prevent tiles in DND from moving
+    void Fix();
 };
 
