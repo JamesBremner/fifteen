@@ -50,21 +50,21 @@ public:
         return NodeFromColRow( s.r, s.c );
     }
 
-    /// row, col from spot index
-    cSpot ColRowFromNode( int j )
-    {
-        cSpot s;
-        s.c = j%4;
-        s.r = j/4;
-//        s.c = G[j].r;
-//        s.r = G[j].c;
-//        if( s.c != j%4 || s.r != j/4 )
-//        {
-//            std::cout << "ColRowFromNode " << j <<" "<< s.c <<" "<< s.r << "\n";
-//            exit(1);
-//        }
-        return s;
-    }
+//    /// row, col from spot index
+//    cSpot ColRowFromNode( int j )
+//    {
+//        cSpot s;
+//        s.c = j%4;
+//        s.r = j/4;
+////        s.c = G[j].r;
+////        s.r = G[j].c;
+////        if( s.c != j%4 || s.r != j/4 )
+////        {
+////            std::cout << "ColRowFromNode " << j <<" "<< s.c <<" "<< s.r << "\n";
+////            exit(1);
+////        }
+//        return s;
+//    }
 
     /// find spot index that holds tile
     int SpotFromTile( int t );

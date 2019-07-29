@@ -397,11 +397,9 @@ void cFifteen::Slide( int jc )
 
 void cBox::Slide( int spot )
 {
-    cSpot cr = ColRowFromNode( spot );
     int j0 = SpotFromTile( 0 );
-    cSpot cr0 = ColRowFromNode( j0 );
-    int dx = cr0.r - cr.r;
-    int dy = cr0.c - cr.c;
+    int dx = G[j0].c - G[spot].c;
+    int dy = G[j0].r - G[spot].r;
     if( ((dx == 1 || dx == -1 ) && dy == 0 ) ||
             (( dy == 1 || dy == -1) && dx == 0 ) )
     {
@@ -450,7 +448,7 @@ string cBox::Text()
 bool cFifteen::IsSolveable()
 {
     //Text();
-    int zr = myBox.ColRowFromNode( myBox.SpotFromTile( 0 ) ).r;
+    int zr = myBox.SpotFromTile( 0 ) / 4;
     int ic = InvCount();
     // cout << "IsSolveable "<< ic << " " << zr << "\n";
     if( ic % 2 )
